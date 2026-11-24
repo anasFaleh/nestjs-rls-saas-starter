@@ -13,6 +13,8 @@ list() {
 }
 ```
 
+**Website:** https://anasfaleh.github.io/nestjs-rls-saas-starter/ · **Pro edition** (users, RBAC, billing, jobs, deploy) is coming: [join the waitlist](https://anasfaleh.github.io/nestjs-rls-saas-starter/#waitlist).
+
 ## What you get
 
 - **Postgres RLS done right**: `ENABLE` + `FORCE` row level security, policies with both `USING` and `WITH CHECK`,
@@ -86,6 +88,7 @@ src/
   cli/tenants.ts   tenant admin CLI
 test/              e2e: tenant isolation, DB privilege audit, HTTP API
 docs/              architecture, adding a tenant table
+site/              landing page (GitHub Pages)
 ```
 
 ## Docs
