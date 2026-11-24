@@ -1,0 +1,17 @@
+/dist
+/node_modules
+/coverage
+*.tsbuildinfo
+*.log
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# Prisma generated client (run `npx prisma generate`)
+/src/generated
