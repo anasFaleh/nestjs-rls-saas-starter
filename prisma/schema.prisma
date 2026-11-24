@@ -1,0 +1,66 @@
+// Every tenant-owned model needs, besides this file, a hand-written part in its migration:
+// GRANTs for the runtime role + ENABLE/FORCE RLS + a tenant_isolation policy. See docs/adding-a-tenant-table.md.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+
+  @@map("tenant_status")
+}
+
+/// A customer organisation of your SaaS. RLS: a tenant sees only its own row.
+model Tenant {
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  status    TenantStatus @default(ACTIVE)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  apiKeys  ApiKey[]
+  projects Project[]
+
+  @@map("tenants")
+}
+
+/// API keys. Only the SHA-256 of the key is stored; `prefix` is kept to recognise a key in a list.
+/// The API resolves key -> tenant through the SECURITY DEFINER function resolve_api_key() (docs/architecture.md).
+model ApiKey {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  name      String
+  prefix    String
+  keyHash   Bytes     @unique @map("key_hash")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@map("api_keys")
+}
+
+/// Example tenant-owned resource. Copy its pattern for your own tables.
+model Project {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId, createdAt])
+  @@map("projects")
+}
